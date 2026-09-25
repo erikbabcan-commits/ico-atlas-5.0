@@ -67,7 +67,10 @@ php artisan serve
 | GET | `/api/v1/companies/{ico}` | konsolidovaný profil firmy |
 | GET | `/api/v1/companies/{ico}/graph?depth=1|2&edges=STATUTORY,...` | graf nodes+edges |
 | GET | `/api/v1/companies/{ico}/risk` | deterministické risk flags + score 0–1 |
-| POST | `/api/v1/reports/due-diligence` | **stub** — vráti job id + JSON draft |
+| POST | `/api/v1/reports/due-diligence` | vygeneruje PDF DD report (tier: `lite`/`full`) → 201 + job id + sha256 |
+| GET | `/api/v1/reports/{jobId}` | status jobu + draft |
+| GET | `/api/v1/reports/{jobId}/download` | stiahnutie PDF (sha256 integrity) |
+| POST | `/api/v1/reports/{jobId}/checkout` | Stripe Checkout session (ak `WHOISWHO_STRIPE_ENABLED=true`, inak 501) |
 
 Auth: `Authorization: Bearer <WHOISWHO_API_KEY>`.
 
@@ -86,8 +89,9 @@ curl -s -H "Authorization: Bearer $KEY" \
   http://localhost:8000/api/v1/companies/31333532/risk
 
 curl -s -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
-  -d '{"ico":"31333532"}' \
+  -d '{"ico":"31333532","tier":"lite"}' \
   http://localhost:8000/api/v1/reports/due-diligence
+curl -s -H "Authorization: Bearer $KEY" http://localhost:8000/api/v1/reports/<job_id>/download -o dd-report.pdf
 ```
 
 Každý výstup JSON obsahuje `meta.source_url[]`, `meta.retrieved_at` a `meta.disclaimer`.
@@ -103,10 +107,14 @@ Každý výstup JSON obsahuje `meta.source_url[]`, `meta.retrieved_at` a `meta.d
 
 Score 0–1 = súčet váh zapnutých flagov (konfigurovateľné v `config/whoiswho.php`).
 
-## Monetizácia (neskôr)
+## Monetizácia (F5)
 
-DD report / seats — teraz len stub endpoint `POST /reports/due-diligence` (vráti job id
-+ JSON draft). Žiadny Stripe/billing UI v tejto fáze.
+DD report PDF: `POST /reports/due-diligence` vygeneruje report (obsah: identifikácia,
+rizikové hodnotenie so skóre, štatutári, vlastníci, graf prepojení, disclaimer,
+sha256 pečať integrity). Cenník v `config/whoiswho.php` (`reports.pricing`):
+lite 19 € / full 49 €. Stripe Checkout je oddelený endpoint (`/checkout`),
+defaultne vypnutý (`WHOISWHO_STRIPE_ENABLED=false`, 501 ak nie je nakonfigurované).
+Žiadny SDK — priame REST volanie na `api.stripe.com`.
 
 ## Hranica vs ForenX
 

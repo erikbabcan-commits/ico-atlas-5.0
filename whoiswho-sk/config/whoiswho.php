@@ -89,4 +89,19 @@ return [
         'max_depth' => 2,
         'max_nodes' => 200,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | DD reporty (F5): PDF + monetizácia
+    |--------------------------------------------------------------------------
+    */
+    'reports' => [
+        'storage_disk' => env('WHOISWHO_REPORT_DISK', 'local'),
+        'stripe_enabled' => (bool) env('WHOISWHO_STRIPE_ENABLED', false),
+        'stripe_secret' => (string) env('WHOISWHO_STRIPE_SECRET', ''),
+        'pricing' => [
+            'lite' => ['amount_cents' => 1900, 'currency' => 'eur'],
+            'full' => ['amount_cents' => 4900, 'currency' => 'eur'],
+        ],
+    ],
 ];

@@ -198,7 +198,7 @@ class CompanyApiTest extends TestCase
         $this->assertEquals(0.0, $response->json('data.score'));
     }
 
-    public function test_due_diligence_stub_returns_job_id(): void
+    public function test_due_diligence_returns_job_id_and_pdf(): void
     {
         Company::create([
             'ico' => '31333532',
@@ -210,11 +210,11 @@ class CompanyApiTest extends TestCase
         ]);
 
         $this->postJson('/api/v1/reports/due-diligence', ['ico' => '31333532'], ['Authorization' => 'Bearer test-key'])
-            ->assertStatus(202)
+            ->assertStatus(201)
             ->assertJsonStructure([
-                'data' => ['job_id', 'status', 'ico', 'draft'],
-                'meta' => ['retrieved_at', 'disclaimer', 'note'],
+                'data' => ['job_id', 'status', 'ico', 'tier', 'pdf', 'download_url'],
+                'meta' => ['retrieved_at', 'disclaimer'],
             ])
-            ->assertJsonPath('data.status', 'draft');
+            ->assertJsonPath('data.status', 'ready');
     }
 }
