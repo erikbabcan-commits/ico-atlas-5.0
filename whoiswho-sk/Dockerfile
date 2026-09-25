@@ -11,6 +11,15 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo pdo_pgsql pgsql zip \
     && rm -rf /var/lib/apt/lists/*
 
+RUN { \
+    echo "expose_php = Off"; \
+  } > /usr/local/etc/php/conf.d/whoiswho-hardening.ini && \
+  { \
+    echo "ServerTokens Prod"; \
+    echo "ServerSignature Off"; \
+  } > /etc/apache2/conf-available/whoiswho-hardening.conf && \
+  ln -sf /etc/apache2/conf-available/whoiswho-hardening.conf /etc/apache2/conf-enabled/whoiswho-hardening.conf
+
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY composer.json composer.lock ./
