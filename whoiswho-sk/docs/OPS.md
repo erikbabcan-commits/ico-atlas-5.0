@@ -51,29 +51,43 @@ Pri kompromitácii alebo pravidelnej rotácii postupujte takto:
 
 ---
 
-## 3. Pridanie oficiálnej domény a Let's Encrypt certifikátu
+## 3. TLS Certifikát (Let's Encrypt) & Domény
 
-Na VPS je predinštalovaný `certbot` aj `python3-certbot-nginx`.
+Aktuálne je aktívny platný Let's Encrypt certifikát pre `2.29.52.59.sslip.io` s automatickou obnovou.
 
-Akonáhle nasmerujete DNS A-záznam (napr. `whoiswho.bizagent.sk` ➜ `2.29.52.59`):
-
-```bash
-# 1. Získanie a automatické nastavenie certifikátu
-certbot --nginx -d whoiswho.bizagent.sk
-
-# 2. Test automatickej obnovy certifikátu
-certbot renew --dry-run
-```
-
-Certbot automaticky upraví konfiguráciu Nginxu v `/etc/nginx/sites-available/whoiswho` a aktivuje systémový timer.
+### Pridanie vlastnej domény (napr. `api.whoiswho.sk`):
+1. Nasmerujte DNS A-záznam:
+   ```text
+   api.whoiswho.sk ➜ 2.29.52.59
+   ```
+2. Spustite certbot:
+   ```bash
+   certbot --nginx -d api.whoiswho.sk
+   ```
+3. Aktualizujte Vercel:
+   ```bash
+   npx vercel env rm WHOISWHO_API_URL production -y && echo -n "https://api.whoiswho.sk" | npx vercel env add WHOISWHO_API_URL production
+   ```
 
 ---
 
-## 4. Firewall a ochrana (UFW & fail2ban)
+## 4. Adversarial Smoke Test
+
+Všetky bezpečnostné pravidlá (auth, validácia, CORS, hlavičky, determinizmus, rate-limit) sa overujú skriptom `scripts/adversarial-smoke.php`:
+
+```bash
+docker exec whoiswho_api php scripts/adversarial-smoke.php https://2.29.52.59.sslip.io/api/v1
+```
+
+Očakávaný výsledok: `DONE: 26 checks, exit=0`.
+
+---
+
+## 5. Firewall a ochrana (UFW & fail2ban)
 
 * **UFW:** Povolené len porty `22`, `80`, `443` a `8080`.
 * **Fail2ban:** Monitoruje neúspešné pokusy o prihlásenie cez SSH (`/var/log/auth.log`) a automaticky banuje útočníkov.
 * **Health monitoring:**
   ```bash
-  curl -s -k https://2.29.52.59/api/v1/health
+  curl -s https://2.29.52.59.sslip.io/api/v1/health
   ```
