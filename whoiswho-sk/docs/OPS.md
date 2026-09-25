@@ -55,19 +55,41 @@ Pri kompromitácii alebo pravidelnej rotácii postupujte takto:
 
 Aktuálne je aktívny platný Let's Encrypt certifikát pre `2.29.52.59.sslip.io` s automatickou obnovou.
 
-### Pridanie vlastnej domény (napr. `api.whoiswho.sk`):
-1. Nasmerujte DNS A-záznam:
-   ```text
-   api.whoiswho.sk ➜ 2.29.52.59
-   ```
-2. Spustite certbot:
-   ```bash
-   certbot --nginx -d api.whoiswho.sk
-   ```
-3. Aktualizujte Vercel:
-   ```bash
-   npx vercel env rm WHOISWHO_API_URL production -y && echo -n "https://api.whoiswho.sk" | npx vercel env add WHOISWHO_API_URL production
-   ```
+### Cieľová doména: `whoiswho.at` (Websupport DNS + VPS Nginx)
+
+**DNS (A záznamy → VPS `2.29.52.59`):**
+```text
+whoiswho.at      A    2.29.52.59
+www.whoiswho.at  A    2.29.52.59
+api.whoiswho.at  A    2.29.52.59
+```
+- **Zmaž** AAAA pre apex / www / wildcard (Websupport IPv6 by obchádzal VPS).
+- **Nechaj** MX + mail/smtp/imap/pop3/webmail + SPF/DMARC (mail ostáva na Websupport).
+- Wildcard `*.whoiswho.at` radšej **zmaž**; stačia explicitné `api` / `www` / apex.
+
+**Overenie propagácie:**
+```bash
+nslookup api.whoiswho.at
+# → 2.29.52.59
+curl -sI http://api.whoiswho.at/api/v1/health
+```
+
+**Certbot na VPS (až DNS sedí):**
+```bash
+# Nginx server_name musí obsahovať whoiswho.at www.whoiswho.at api.whoiswho.at
+certbot --nginx -d whoiswho.at -d www.whoiswho.at -d api.whoiswho.at
+curl -s https://api.whoiswho.at/api/v1/health
+```
+
+**ForenX / Vercel:**
+```bash
+printf "https://api.whoiswho.at" | npx vercel env add WHOISWHO_API_URL production --force
+# Lokálne .env: WHOISWHO_API_URL="https://api.whoiswho.at"
+npx vercel --prod --yes   # alebo redeploy po env zmene
+```
+
+### Legacy / fallback
+- `https://2.29.52.59.sslip.io` — dočasný LE host, kým `api.whoiswho.at` nie je live.
 
 ---
 
