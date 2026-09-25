@@ -31,6 +31,8 @@ services:
       LOG_CHANNEL: stderr
     ports:
       - "127.0.0.1:8000:80"
+    volumes:
+      - reports_data:/var/www/html/storage/app/reports
     depends_on:
       postgres:
         condition: service_healthy
@@ -44,3 +46,4 @@ services:
 
 volumes:
   postgres_data:
+  reports_data:

@@ -108,9 +108,18 @@ check('risk sources[]', !empty($ri['sources']) && is_array($ri['sources']));
 $r2 = call("$base/companies/31333532/risk", $key);
 check('risk deterministický', ($r2['json']['data']['score'] ?? 'a') === ($ri['score'] ?? 'b'));
 
-// --- 8. DD stub ---
+// --- 8. DD report (F5) ---
 $r = call("$base/reports/due-diligence", $key, 'POST', json_encode(['ico' => '31333532']));
-check('DD stub 202 + job_id', $r['code'] === 202 && !empty($r['json']['data']['job_id']), 'got ' . $r['code']);
+check('DD report 201 + job_id', $r['code'] === 201 && !empty($r['json']['data']['job_id']), 'got ' . $r['code']);
+$jobId = $r['json']['data']['job_id'] ?? '';
+$shaExpected = $r['json']['data']['pdf']['sha256'] ?? '';
+
+if ($jobId !== '') {
+    $rDl = call("$base/reports/$jobId/download", $key);
+    check('DD download 200', $rDl['code'] === 200, 'got ' . $rDl['code']);
+    check('DD download %PDF', str_starts_with((string)$rDl['raw'], '%PDF'), 'starts with ' . substr((string)$rDl['raw'], 0, 4));
+    check('DD download sha256 match', hash('sha256', (string)$rDl['raw']) === $shaExpected, 'sha verified');
+}
 
 // --- 9. Security headers ---
 $r = call("$base/health");
