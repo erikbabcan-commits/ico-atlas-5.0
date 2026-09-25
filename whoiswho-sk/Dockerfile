@@ -1,4 +1,4 @@
-FROM php:8.3-apache
+FROM php:8.4-apache
 
 WORKDIR /var/www/html
 
@@ -18,7 +18,7 @@ RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction
 
 COPY . .
 
-RUN composer post-autoload-dump || true
+RUN rm -f bootstrap/cache/*.php && php artisan package:discover --ansi || true
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && a2enmod rewrite

@@ -3,15 +3,13 @@ services:
     image: postgres:16-alpine
     container_name: whoiswho_postgres
     environment:
-      POSTGRES_DB: whoiswho
-      POSTGRES_USER: whoiswho
-      POSTGRES_PASSWORD: whoiswho_dev
+      POSTGRES_DB: ${DB_DATABASE:-whoiswho}
+      POSTGRES_USER: ${DB_USERNAME:-whoiswho}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-whoiswho_dev}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U whoiswho -d whoiswho"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-whoiswho} -d $${POSTGRES_DB:-whoiswho}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -22,23 +20,17 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: whoiswho_api
+    env_file:
+      - .env
     environment:
-      APP_ENV: local
-      APP_DEBUG: "false"
-      # V produkcii nastav vlastný kľúč: openssl rand -base64 32
-      APP_KEY: base64:REPLACE_WITH_OWN_APP_KEY
-      WHOISWHO_API_KEY: dev-local-key
       DB_CONNECTION: pgsql
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_DATABASE: whoiswho
-      DB_USERNAME: whoiswho
-      DB_PASSWORD: whoiswho_dev
       CACHE_STORE: database
       SESSION_DRIVER: array
       LOG_CHANNEL: stderr
     ports:
-      - "8000:80"
+      - "0.0.0.0:8000:80"
     depends_on:
       postgres:
         condition: service_healthy
