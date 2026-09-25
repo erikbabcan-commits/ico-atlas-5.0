@@ -18,7 +18,9 @@ RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction
 
 COPY . .
 
-RUN rm -f bootstrap/cache/*.php && php artisan package:discover --ansi || true
+RUN rm -f bootstrap/cache/*.php \
+    && composer dump-autoload --optimize --no-dev \
+    && php artisan package:discover --ansi
 
 RUN chown -R www-data:www-data storage bootstrap/cache \
     && a2enmod rewrite

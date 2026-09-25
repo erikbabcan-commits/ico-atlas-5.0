@@ -30,7 +30,7 @@ services:
       SESSION_DRIVER: array
       LOG_CHANNEL: stderr
     ports:
-      - "0.0.0.0:8000:80"
+      - "127.0.0.1:8000:80"
     depends_on:
       postgres:
         condition: service_healthy
