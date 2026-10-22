@@ -68,3 +68,7 @@ ssl/*.cert
 # Database
 *.db
 backend/sql_app.db
+
+# Request diagnostics may contain credentials; never track new traces.
+**/debug_trace*.txt
+**/*debug*.log
