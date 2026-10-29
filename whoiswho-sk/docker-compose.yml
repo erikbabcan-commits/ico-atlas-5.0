@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: whoiswho_postgres
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-whoiswho}
+      POSTGRES_USER: ${DB_USERNAME:-whoiswho}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-whoiswho_dev}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-whoiswho} -d $${POSTGRES_DB:-whoiswho}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whoiswho_api
+    env_file:
+      - .env
+    environment:
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      CACHE_STORE: database
+      SESSION_DRIVER: array
+      LOG_CHANNEL: stderr
+    ports:
+      - "127.0.0.1:8000:80"
+    volumes:
+      - reports_data:/var/www/html/storage/app/reports
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  postgres_data:
+  reports_data:

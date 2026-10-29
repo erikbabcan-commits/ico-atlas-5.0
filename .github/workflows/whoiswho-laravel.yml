@@ -1,0 +1,42 @@
+name: WhoIsWho Laravel verification
+
+on:
+  pull_request:
+    paths: ["whoiswho-sk/**", ".github/workflows/whoiswho-laravel.yml"]
+  push:
+    branches: [main]
+    paths: ["whoiswho-sk/**", ".github/workflows/whoiswho-laravel.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  laravel:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: whoiswho-sk
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      CACHE_STORE: array
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.5"
+          extensions: mbstring, dom, sqlite3, pdo_sqlite, gd
+          tools: composer:v2
+          coverage: none
+      - name: Install locked application dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+      - name: Run unit and HTTP API tests against in-memory SQLite
+        run: php artisan test
