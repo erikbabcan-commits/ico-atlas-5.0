@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+vendor
+node_modules
+bootstrap/cache/*.php
+!bootstrap/cache/.gitignore
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+*.sqlite
