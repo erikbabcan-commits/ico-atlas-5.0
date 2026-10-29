@@ -1,0 +1,14 @@
+{
+  "name": "vorkei/ico-atlas-vercel-build",
+  "type": "project",
+  "description": "Vercel build bridge for the Laravel application in ico-atlas.",
+  "require": {
+    "php": "^8.2"
+  },
+  "scripts": {
+    "vercel": [
+      "@composer --working-dir=ico-atlas install --no-dev --prefer-dist --no-interaction --optimize-autoloader",
+      "@php -r \"if (!is_file('ico-atlas/vendor/autoload.php')) { fwrite(STDERR, 'Laravel vendor autoloader missing'); exit(1); }\""
+    ]
+  }
+}
