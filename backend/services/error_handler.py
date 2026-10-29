@@ -4,7 +4,6 @@ Centralizované error handling pre ILUMINATI SYSTEM
 """
 
 import logging
-import traceback
 from typing import Optional, Dict, Any
 from datetime import datetime
 from fastapi import Request, HTTPException
@@ -16,7 +15,6 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/iluminati.log'),
         logging.StreamHandler()
     ]
 )
@@ -57,24 +55,17 @@ def log_error(error: Exception, context: Optional[Dict[str, Any]] = None, reques
         context: Dodatočný kontext (dict)
         request: FastAPI Request objekt
     """
+    # Deliberately allowlist metadata. Exception text/tracebacks, context values,
+    # URLs, cookies and request headers may all contain credentials or user data.
+    # Do not stringify them, even in development or on an error path.
     error_info = {
         "error_type": type(error).__name__,
-        "error_message": str(error),
-        "traceback": traceback.format_exc(),
         "timestamp": datetime.now().isoformat(),
-        "context": context or {}
     }
-    
     if request:
-        error_info["request"] = {
-            "url": str(request.url),
-            "method": request.method,
-            "client": request.client.host if request.client else None,
-            "headers": dict(request.headers)
-        }
-    
-    logger.error(f"Error occurred: {error_info}")
-    
+        error_info["request"] = {"method": request.method}
+    logger.error("Error occurred: %s", error_info)
+
     # V produkcii by sme tu poslali do Sentry
     # sentry_sdk.capture_exception(error, contexts={"custom": error_info})
 

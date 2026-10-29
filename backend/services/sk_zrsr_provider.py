@@ -6,7 +6,6 @@ Implementácia podľa IČO ATLAS specifikácie
 
 import re
 import time
-import warnings
 from typing import Dict, Optional
 
 import requests
@@ -31,14 +30,10 @@ class ZrsrProvider:
 
     def __init__(self):
         self.session = requests.Session()
-        self.session.verify = False
-        # Potlač SSL warnings
-        try:
-            import urllib3
-
-            urllib3.disable_warnings()
-        except ImportError:
-            warnings.filterwarnings("ignore", message="Unverified HTTPS request")
+        # Keep Requests certificate and hostname verification enabled.
+        # Configure REQUESTS_CA_BUNDLE for an approved custom trust chain;
+        # never fall back to an unverified connection.
+        self.session.verify = True
 
         # User-Agent pre lepšiu kompatibilitu
         self.session.headers.update(
