@@ -36,7 +36,9 @@ jobs:
           extensions: mbstring, dom, sqlite3, pdo_sqlite, gd
           tools: composer:v2
           coverage: none
+      - name: Create an empty local test environment file
+        run: touch .env
       - name: Install locked application dependencies
         run: composer install --prefer-dist --no-interaction --no-progress
       - name: Run unit and HTTP API tests against in-memory SQLite
-        run: php artisan test
+        run: php artisan test --fail-on-warning
